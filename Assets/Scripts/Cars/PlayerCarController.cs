@@ -45,8 +45,6 @@ namespace Cars
 			{
 				Accelerate(info, motorTorque);
 				Steer(info, steering);
-				UpdateWheelsVisuals(info.leftWheel, info.leftWheelVisual);
-				UpdateWheelsVisuals(info.rightWheel, info.rightWheelVisual);
 			}
 		}
 	}

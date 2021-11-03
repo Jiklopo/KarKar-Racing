@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Cars;
+using UnityEditor;
 using UnityEngine;
 
 public abstract class Car : MonoBehaviour
@@ -8,6 +10,21 @@ public abstract class Car : MonoBehaviour
 	[SerializeField] protected List<AxleInfo> axleInfos;
 	[SerializeField] protected float maxMotorTorque;
 	[SerializeField] protected float maxSteeringAngle;
+
+	private void Update()
+	{
+		foreach (var info in axleInfos)
+		{
+			UpdateWheelsVisuals(info.leftWheel, info.leftWheelVisual);
+			UpdateWheelsVisuals(info.rightWheel, info.rightWheelVisual);
+		}
+
+		OnUpdate();
+	}
+
+	protected virtual void OnUpdate()
+	{
+	}
 
 	protected void Accelerate(AxleInfo axleInfo, float motorTorque)
 	{
@@ -23,6 +40,7 @@ public abstract class Car : MonoBehaviour
 		if (!axleInfo.steering)
 			return;
 
+		steeringAngle = Mathf.Clamp(steeringAngle, -maxSteeringAngle, maxSteeringAngle);
 		axleInfo.rightWheel.steerAngle = steeringAngle;
 		axleInfo.leftWheel.steerAngle = steeringAngle;
 	}
