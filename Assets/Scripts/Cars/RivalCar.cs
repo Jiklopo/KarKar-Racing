@@ -1,20 +1,16 @@
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Checkpoints;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.InputSystem;
 
 namespace Cars
 {
 	public class RivalCar : Car
 	{
 		[SerializeField] private float minDistanceToDestination = 2f;
-		[SerializeField] private float onMeshThreshold = 3;
+		private readonly Queue<Vector3> path = new Queue<Vector3>();
 		private Transform target;
 		private NavMeshAgent navMeshAgent;
-		private Queue<Vector3> path = new Queue<Vector3>();
 		private Vector3 destination;
 		private Vector3 direction;
 		private float angle;
@@ -40,14 +36,14 @@ namespace Cars
 			if (!hasDestination || Vector3.Distance(position, destination) < minDistanceToDestination)
 				UpdateDestination();
 
-			if (!NavMesh.SamplePosition(position, out var hit, onMeshThreshold, NavMesh.AllAreas))
+			if (!IsOnTrack())
 			{
 				ResetCar();
 				CalculatePath();
 			}
 
 			direction = Vector3.ProjectOnPlane(destination - position, Vector3.up).normalized;
-			var dotProduct = Vector3.Dot(direction, forward);
+			var dotProduct = Vector3.Dot(direction, forward) + 0.1f;
 			angle = Vector3.SignedAngle(forward, direction, Vector3.up) * dotProduct;
 			var acceleration = maxMotorTorque * dotProduct;
 
@@ -73,8 +69,8 @@ namespace Cars
 
 		private void CalculatePath()
 		{
-			var navMeshPath = new NavMeshPath();
 			navMeshAgent.enabled = true;
+			var navMeshPath = new NavMeshPath();
 			target = CheckpointsController.Instance.GetNextCheckpoint(target);
 			if (!navMeshAgent.CalculatePath(target.position, navMeshPath))
 			{
@@ -88,8 +84,6 @@ namespace Cars
 			foreach (var corner in navMeshPath.corners)
 				path.Enqueue(corner);
 			Debug.Log($"Calculated Path: {string.Join(" ", navMeshPath.corners)}");
-			UpdateResetPosition();
-			navMeshAgent.ResetPath();
 			navMeshAgent.enabled = false;
 		}
 
@@ -98,18 +92,15 @@ namespace Cars
 			if (!hasDestination)
 				return;
 
-			var position = transform.position;
-			var forward = transform.forward;
+			var tr = transform;
+			var position = tr.position;
+			var forward = tr.forward;
 
 			Gizmos.color = Color.green;
 			Gizmos.DrawWireSphere(destination, 1f);
 			Gizmos.DrawRay(position, direction * 10);
 
-			Gizmos.color = Color.blue;
-			Gizmos.DrawRay(position, forward * 10);
-
-			var angleRotation = Quaternion.Euler(0, 0, angle);
-			var angleDirection = angleRotation * forward;
+			var angleDirection = Quaternion.Euler(0, angle, 0) * forward;
 			Gizmos.color = Color.red;
 			Gizmos.DrawRay(position, angleDirection * 10);
 		}

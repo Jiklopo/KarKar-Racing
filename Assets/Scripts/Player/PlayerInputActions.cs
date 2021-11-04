@@ -43,6 +43,14 @@ namespace Player
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Reset"",
+                    ""type"": ""Button"",
+                    ""id"": ""cb65437c-63c4-42eb-8946-82defc8d2f26"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -188,6 +196,17 @@ namespace Player
                     ""action"": ""Handbrake"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9506f500-0e7d-4d2a-8d00-6eae54f88402"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reset"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -226,6 +245,7 @@ namespace Player
             m_Controls_Gas = m_Controls.FindAction("Gas", throwIfNotFound: true);
             m_Controls_Steering = m_Controls.FindAction("Steering", throwIfNotFound: true);
             m_Controls_Handbrake = m_Controls.FindAction("Handbrake", throwIfNotFound: true);
+            m_Controls_Reset = m_Controls.FindAction("Reset", throwIfNotFound: true);
             // UI
             m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
             m_UI_Pause = m_UI.FindAction("Pause", throwIfNotFound: true);
@@ -281,6 +301,7 @@ namespace Player
         private readonly InputAction m_Controls_Gas;
         private readonly InputAction m_Controls_Steering;
         private readonly InputAction m_Controls_Handbrake;
+        private readonly InputAction m_Controls_Reset;
         public struct ControlsActions
         {
             private @PlayerInputActions m_Wrapper;
@@ -288,6 +309,7 @@ namespace Player
             public InputAction @Gas => m_Wrapper.m_Controls_Gas;
             public InputAction @Steering => m_Wrapper.m_Controls_Steering;
             public InputAction @Handbrake => m_Wrapper.m_Controls_Handbrake;
+            public InputAction @Reset => m_Wrapper.m_Controls_Reset;
             public InputActionMap Get() { return m_Wrapper.m_Controls; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -306,6 +328,9 @@ namespace Player
                     @Handbrake.started -= m_Wrapper.m_ControlsActionsCallbackInterface.OnHandbrake;
                     @Handbrake.performed -= m_Wrapper.m_ControlsActionsCallbackInterface.OnHandbrake;
                     @Handbrake.canceled -= m_Wrapper.m_ControlsActionsCallbackInterface.OnHandbrake;
+                    @Reset.started -= m_Wrapper.m_ControlsActionsCallbackInterface.OnReset;
+                    @Reset.performed -= m_Wrapper.m_ControlsActionsCallbackInterface.OnReset;
+                    @Reset.canceled -= m_Wrapper.m_ControlsActionsCallbackInterface.OnReset;
                 }
                 m_Wrapper.m_ControlsActionsCallbackInterface = instance;
                 if (instance != null)
@@ -319,6 +344,9 @@ namespace Player
                     @Handbrake.started += instance.OnHandbrake;
                     @Handbrake.performed += instance.OnHandbrake;
                     @Handbrake.canceled += instance.OnHandbrake;
+                    @Reset.started += instance.OnReset;
+                    @Reset.performed += instance.OnReset;
+                    @Reset.canceled += instance.OnReset;
                 }
             }
         }
@@ -361,6 +389,7 @@ namespace Player
             void OnGas(InputAction.CallbackContext context);
             void OnSteering(InputAction.CallbackContext context);
             void OnHandbrake(InputAction.CallbackContext context);
+            void OnReset(InputAction.CallbackContext context);
         }
         public interface IUIActions
         {
