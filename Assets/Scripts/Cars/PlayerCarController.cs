@@ -12,7 +12,7 @@ namespace Cars
 		private float defaultBrakeTorque;
 		private bool handbrake;
 
-		private void Awake()
+		protected override void OnAwake()
 		{
 			defaultBrakeTorque = axleInfos[0].rightWheel.brakeTorque;
 			inputActions = new PlayerInputActions();

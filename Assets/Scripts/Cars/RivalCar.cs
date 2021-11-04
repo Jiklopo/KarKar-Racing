@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Checkpoints;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
@@ -9,34 +10,47 @@ namespace Cars
 {
 	public class RivalCar : Car
 	{
-		[SerializeField] private Transform target;
 		[SerializeField] private float minDistanceToDestination = 2f;
+		[SerializeField] private float onMeshThreshold = 3;
+		private Transform target;
 		private NavMeshAgent navMeshAgent;
-		private Queue<Vector3> cornersStack = new Queue<Vector3>();
+		private Queue<Vector3> path = new Queue<Vector3>();
 		private Vector3 destination;
 		private Vector3 direction;
 		private float angle;
 		private bool hasDestination;
 
-		private void Start()
+		protected override void OnAwake()
 		{
 			navMeshAgent = GetComponent<NavMeshAgent>();
-			CalculatePath();
+		}
+
+		private void Start()
+		{
+			target = CheckpointsController.Instance.GetNextCheckpoint(-1);
 			UpdateDestination();
+			CalculatePath();
 		}
 
 		private void FixedUpdate()
 		{
-			var position = transform.position;
-			var forward = transform.forward;
+			var tr = transform;
+			var position = tr.position;
+			var forward = tr.forward;
 			if (!hasDestination || Vector3.Distance(position, destination) < minDistanceToDestination)
 				UpdateDestination();
-			
+
+			if (!NavMesh.SamplePosition(position, out var hit, onMeshThreshold, NavMesh.AllAreas))
+			{
+				ResetCar();
+				CalculatePath();
+			}
+
 			direction = Vector3.ProjectOnPlane(destination - position, Vector3.up).normalized;
 			var dotProduct = Vector3.Dot(direction, forward);
 			angle = Vector3.SignedAngle(forward, direction, Vector3.up) * dotProduct;
 			var acceleration = maxMotorTorque * dotProduct;
-	
+
 			foreach (var info in axleInfos)
 			{
 				Steer(info, angle);
@@ -46,22 +60,23 @@ namespace Cars
 
 		private bool UpdateDestination()
 		{
-			if (cornersStack.Count != 0)
+			if (path.Count != 0)
 			{
-				destination = cornersStack.Dequeue();
+				destination = path.Dequeue();
 				hasDestination = true;
 				return true;
 			}
 
-			Task.Run(CalculatePath);
+			CalculatePath();
 			return false;
 		}
 
-		private async void CalculatePath()
+		private void CalculatePath()
 		{
-			await Task.Delay(1);
-			var path = new NavMeshPath();
-			if (!navMeshAgent.CalculatePath(target.position, path))
+			var navMeshPath = new NavMeshPath();
+			navMeshAgent.enabled = true;
+			target = CheckpointsController.Instance.GetNextCheckpoint(target);
+			if (!navMeshAgent.CalculatePath(target.position, navMeshPath))
 			{
 				hasDestination = false;
 				Debug.LogWarning("Failed to calculate path!");
@@ -69,36 +84,34 @@ namespace Cars
 				return;
 			}
 
-			cornersStack.Clear();
-			foreach (var corner in path.corners)
-				cornersStack.Enqueue(corner);
-			Debug.Log($"Calculated Path: {string.Join(" ", path.corners)}");
-		}
-
-		private void ResetCar()
-		{
-			throw new NotImplementedException();
+			path.Clear();
+			foreach (var corner in navMeshPath.corners)
+				path.Enqueue(corner);
+			Debug.Log($"Calculated Path: {string.Join(" ", navMeshPath.corners)}");
+			UpdateResetPosition();
+			navMeshAgent.ResetPath();
+			navMeshAgent.enabled = false;
 		}
 
 		private void OnDrawGizmos()
 		{
-			if(!hasDestination)
+			if (!hasDestination)
 				return;
-			
+
 			var position = transform.position;
 			var forward = transform.forward;
-			
+
 			Gizmos.color = Color.green;
 			Gizmos.DrawWireSphere(destination, 1f);
 			Gizmos.DrawRay(position, direction * 10);
-			
+
 			Gizmos.color = Color.blue;
 			Gizmos.DrawRay(position, forward * 10);
 
 			var angleRotation = Quaternion.Euler(0, 0, angle);
 			var angleDirection = angleRotation * forward;
 			Gizmos.color = Color.red;
-			Gizmos.DrawRay( position, angleDirection * 10);
+			Gizmos.DrawRay(position, angleDirection * 10);
 		}
 	}
 }
