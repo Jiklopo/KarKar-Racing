@@ -1,6 +1,8 @@
 using System;
 using Cars;
 using System.Collections.Generic;
+using Checkpoints;
+using Events;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -12,6 +14,7 @@ public abstract class Car : MonoBehaviour
 	[SerializeField] protected float maxSteeringAngle;
 	[SerializeField] private float onTrackThreshold = 3f;
 
+	public int CheckPointsPassed { get; private set; }
 	protected Rigidbody rb;
 
 	private Vector3 resetPosition;
@@ -45,13 +48,17 @@ public abstract class Car : MonoBehaviour
 
 	private void OnTriggerEnter(Collider other)
 	{
-		OnCheckpointCrossed(other.transform);
+		var checkpoint = other.GetComponent<Checkpoint>();
+		if(checkpoint == null || !checkpoint.Cross(this))
+			return;
+		
+		UpdateResetPosition();
+		CheckPointsPassed++;
 	}
 
 	protected virtual void OnCheckpointCrossed(Transform checkpoint)
 	{
-		Debug.Log($"{name} crossed {checkpoint.name} at {Time.time}");
-		UpdateResetPosition();
+		
 	}
 
 	protected void Accelerate(AxleInfo axleInfo, float motorTorque)

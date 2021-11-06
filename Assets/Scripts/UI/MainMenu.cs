@@ -7,7 +7,6 @@ namespace UI
 	public class MainMenu : UIElement
 	{
 		[SerializeField] private Button playButton;
-		[SerializeField] private Button levelsButton;
 		[SerializeField] private Button exitButton;
 
 		protected override void OnAwake()

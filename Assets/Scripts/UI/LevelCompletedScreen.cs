@@ -1,4 +1,6 @@
-﻿using Events;
+﻿using Checkpoints;
+using Events;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -7,29 +9,24 @@ namespace UI
 {
 	public class LevelCompletedScreen : UIElement
 	{
-		[SerializeField] private Button nextLevelButton;
+		[SerializeField] private TextMeshProUGUI finishText;
 		[SerializeField] private Button menuButton;
 		protected override void OnAwake()
 		{
-			nextLevelButton.onClick.AddListener(NextLevel);
 			menuButton.onClick.AddListener(GoToMenu);
-			GameBus.OnLevelCompleted += Show;
-		}
-
-		private void OnEnable()
-		{
-			var areLevelsLeft = SceneManager.GetActiveScene().buildIndex < SceneManager.sceneCountInBuildSettings - 1;
-			nextLevelButton.gameObject.SetActive(areLevelsLeft);
-		}
-
-		private void NextLevel()
-		{
-			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+			GameBus.OnLapCompleted += OnLapCompleted;
 		}
 
 		private void GoToMenu()
 		{
+			Time.timeScale = 1;
 			SceneManager.LoadScene(0);
+		}
+
+		private void OnLapCompleted()
+		{
+			finishText.SetText($"Congratulations!\nYour position is {CheckpointsController.Instance.PlayerPos} / 4");
+			Show();
 		}
 
 		protected override void OnShown()

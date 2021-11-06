@@ -24,7 +24,7 @@ namespace UI
 
 		private void OnGamePaused()
 		{
-			if (gameObject.activeSelf)
+			if (IsShown)
 				ResumeGame();
 			else
 				Show();

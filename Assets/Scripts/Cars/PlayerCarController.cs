@@ -1,4 +1,6 @@
-﻿using Player;
+﻿using Events;
+using Player;
+using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,6 +23,7 @@ namespace Cars
 			inputActions.Controls.Handbrake.started += ProcessHandbrake;
 			inputActions.Controls.Handbrake.canceled += ProcessHandbrake;
 			inputActions.Controls.Reset.performed += context => ResetCar();
+			inputActions.UI.Pause.performed += context => GameBus.OnGamePaused.Invoke();
 		}
 
 		private void ProcessHandbrake(InputAction.CallbackContext context)

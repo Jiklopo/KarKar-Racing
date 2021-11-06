@@ -8,6 +8,8 @@ namespace UI
 	{
 		[SerializeField] private bool showAtStart;
 		[SerializeField] private float animationTime = 0.3f;
+
+		public bool IsShown => gameObject.activeSelf;
 		protected Action onClose;
 		protected UIElement lastCaller;
 
